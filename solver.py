@@ -23,6 +23,7 @@ def solve(num_wizards, num_constraints, wizards, constraints):
     """
     ordering: a mapping from character names to indices, wizards is the inverse mapping
     """
+    #fuck yeah
     return wizards
 
 
