@@ -38,9 +38,10 @@ def solve(num_wizards, num_constraints, wizards, constraints):
         z = 100 * first_num + third_num
         cnf_array.append([-x, y])
         cnf_array.append([x, z])
-    satisfying_assignment = pycosat.solve(cnf_array)
     print(wizard_list)
-    print(satisfying_assignment)
+    print(cnf_array)
+    # satisfying_assignment = pycosat.solve(cnf_array)
+    # print(satisfying_assignment)
     #fuck yeah
     return wizards
 
