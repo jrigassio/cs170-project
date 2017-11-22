@@ -63,7 +63,8 @@ def solve(num_wizards, num_constraints, wizards, constraints):
     satisfying_assignment = pycosat.solve(cnf_array)
     # print(satisfying_assignment)
     for item in satisfying_assignment:
-        print("constraint:", pos_wizard[item])
+        if item in pos_wizard:
+            print("constraint:", pos_wizard[item])
     #fuck yeah
     return wizards
 
