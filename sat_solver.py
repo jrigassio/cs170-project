@@ -24,10 +24,11 @@ def solve(num_wizards, num_constraints, wizards, constraints):
     """
     ordering: a mapping from character names to indices, wizards is the inverse mapping
     """
+    wizard_list = list(wizards)
     wizard_numbers = {}
     cnf_array = []
-    for i in range (0, len(wizards)):
-        wizard_numbers[wizards[i]] = i
+    for i in range (0, len(wizard_list)):
+        wizard_numbers[wizard_list[i]] = i + 1
     for con in constraints:
         first_num =  wizard_numbers[con[0]]
         second_num = wizard_numbers[con[1]]
@@ -38,6 +39,7 @@ def solve(num_wizards, num_constraints, wizards, constraints):
         cnf_array.append([-x, y])
         cnf_array.append([x, z])
     satisfying_assignment = pycosat.solve(cnf_array)
+    print(wizard_list)
     print(satisfying_assignment)
     #fuck yeah
     return wizards
