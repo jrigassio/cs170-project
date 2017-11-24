@@ -1,5 +1,6 @@
 import argparse
 import random
+import pycosat
 """
 ======================================================================
   Complete the following function.
@@ -23,70 +24,47 @@ def solve(num_wizards, num_constraints, wizards, constraints):
     """
     ordering: a mapping from character names to indices, wizards is the inverse mapping
     """
-    random.shuffle(wizards)
-    ordering = dict(zip(wizards, range(len(wizards))))
-    i = 0
-    best_score = 0
-    constraints = sorted(constraints, key = lambda x: abs(ordering[x[0]]-ordering[x[1]]))
-    for constraint in constraints:
-        if ordering[constraint[2]] > min(ordering[constraint[0]], ordering[constraint[1]]) and ordering[constraint[2]] < max(ordering[constraint[1]], ordering[constraint[0]]):
-            best_score += 1
-    threshold = 0.9
-    while True:
-        done = True
-        #random.shuffle(constraints)
-        if i % 20 == 0:
-            print("on attempt ", i, " num not satisified: ", best_score, " threshold: ", threshold)
-            print(wizards)
-            threshold = threshold * 0.999
-        if i % 15000 == 0:
-            threshold = 0.9
-        i += 1
-        #looping over all constraints
-        for constraint in constraints:
-            if ordering[constraint[2]] > min(ordering[constraint[0]], ordering[constraint[1]]) and ordering[constraint[2]] < max(ordering[constraint[1]], ordering[constraint[0]]):
-                #all places we ccould possibly swap our item
-                choice_range = list(range(min(ordering[constraint[0]], ordering[constraint[1]])+1)) + list(
-                    range(max(ordering[constraint[0]], ordering[constraint[1]]), len(wizards)))
+    wizard_list = list(wizards)
+    # wizard_position = {}
+    wizard_pos = {}
+    pos_wizard = {}
+    cnf_array = []
+    # for i in range (0, len(wizard_list)):
+    #     wizard_numbers[wizard_list[i]] = i + 1
+    count = 1
+    for con in constraints:
+        first_wiz =  con[0]
+        second_wiz = con[1]
+        third_wiz = con[2]
+        x = (first_wiz, second_wiz)
+        y = (second_wiz, third_wiz)
+        z = (first_wiz, third_wiz)
+        for a in (x, y, z):
+            if a in wizard_pos:
+                pass
+            elif (a[1], a[0]) in wizard_pos:
+                wizard_pos[a] = - wizard_pos[(a[1], a[0])]
+                pos_wizard[-wizard_pos[(a[1], a[0])]] = (a[1], a[0])
+                # pos_wizard[]
+            else:
+                wizard_pos[a] = count
+                pos_wizard[count] = a
+                count += 1
 
-                choice, ct = choice_range[0], 100000
-                #considering all places we can swap the third element to
-                for elem in choice_range:
-                    new_ct = 0
-
-                    #swapping
-                    tmp = ordering[constraint[2]]
-                    wizards[tmp], wizards[elem] = wizards[elem], wizards[tmp]
-                    ordering[wizards[tmp]], ordering[wizards[elem]] = tmp, elem
-
-                    for constraint in constraints:
-                        if ordering[constraint[2]] > min(ordering[constraint[0]], ordering[constraint[1]]) and ordering[constraint[2]] < max(ordering[constraint[1]], ordering[constraint[0]]):
-                            new_ct += 1
-
-                    #swapping back
-                    tmp = ordering[constraint[2]]
-                    wizards[tmp], wizards[elem] = wizards[elem], wizards[tmp]
-                    ordering[wizards[tmp]], ordering[wizards[elem]] = tmp, elem
-
-                    #update count
-                    if new_ct <= ct:
-                        choice, ct = elem, new_ct
-                #update count if better
-                coin = random.random()
-                if coin < threshold:
-                    choice = random.choice(range(len(wizards)))
-                    tmp = ordering[constraint[2]]
-                    wizards[tmp], wizards[choice] = wizards[choice], wizards[tmp]
-                    ordering[wizards[tmp]], ordering[wizards[choice]] = tmp, choice
-                elif ct <= best_score:
-                    best_score = ct
-                    tmp = ordering[constraint[2]]
-                    wizards[tmp], wizards[choice] = wizards[choice], wizards[tmp]
-                    ordering[wizards[tmp]], ordering[wizards[choice]] = tmp, choice
-        if best_score == 0:
-            break
-#ordering for input 3 ['Adan', 'Tamara', 'Zoey', 'Caroline', 'Aubrey', 'Gregg', 'Brayan', 'Rylie', 'Emma', 'Angel', 'Logan', 'Debra', 'Amir', 'Prince', 'Marquis', 'Joselyn', 'Jonah', 'Kiera', 'Faith', 'Ron']
-
+        # x = 100 * first_num + second_num
+        # y = 100 * second_num + third_num
+        # z = 100 * first_num + third_num
+        cnf_array.append([-wizard_pos[x], wizard_pos[y]])
+        cnf_array.append([wizard_pos[x], wizard_pos[z]])
+    print("wiz list:", wizard_list)
+    # for item in cnf_array:
+    #     print("number:", item[0], item[1], "variable: ", pos_wizard[item[0]],  pos_wizard[item[1]])
+    # print(cnf_array)
+    satisfying_assignment = pycosat.solve(cnf_array)
+    # print(satisfying_assignment)
+    for item in satisfying_assignment:
+        if item in pos_wizard:
+            print("constraint:", pos_wizard[item])
     return wizards
 
 
