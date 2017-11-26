@@ -25,13 +25,19 @@ def solve(num_wizards, num_constraints, wizards, constraints):
     ordering: a mapping from character names to indices, wizards is the inverse mapping
     """
     wizard_list = list(wizards)
-    # wizard_position = {}
-    wizard_pos = {}
-    pos_wizard = {}
+    wizard_pos = {} #keys: tuple of a < b, values:
+    pos_wizard = {} #keys: indices values: tuple representing a < b
     cnf_array = []
-    # for i in range (0, len(wizard_list)):
-    #     wizard_numbers[wizard_list[i]] = i + 1
     count = 1
+
+    for i in range(0, len(wizard_list) - 1):
+        for j in range(i+1, len(wizard_list)):
+                wizard_pos[(wizard_list[i], wizard_list[j])] = count
+                pos_wizard[count] = (wizard_list[i], wizard_list[j])
+                wizard_pos[(wizard_list[j], wizard_list[i])] = -count
+                pos_wizard[-count] = (wizard_list[j], wizard_list[i])
+                count += 1
+
     for con in constraints:
         first_wiz =  con[0]
         second_wiz = con[1]
@@ -39,29 +45,37 @@ def solve(num_wizards, num_constraints, wizards, constraints):
         x = (first_wiz, second_wiz)
         y = (second_wiz, third_wiz)
         z = (first_wiz, third_wiz)
-        for a in (x, y, z):
-            if a in wizard_pos:
-                pass
-            elif (a[1], a[0]) in wizard_pos:
-                wizard_pos[a] = - wizard_pos[(a[1], a[0])]
-                pos_wizard[-wizard_pos[(a[1], a[0])]] = (a[1], a[0])
-                # pos_wizard[]
-            else:
-                wizard_pos[a] = count
-                pos_wizard[count] = a
-                count += 1
+        # for a in (x, y, z):
+        #     if a in wizard_pos:
+        #         pass
+        #     elif (a[1], a[0]) in wizard_pos:
+        #         wizard_pos[a] = - wizard_pos[(a[1], a[0])]
+        #         pos_wizard[-wizard_pos[(a[1], a[0])]] = (a[1], a[0])
+        #     else:
+        #         wizard_pos[a] = count
+        #         pos_wizard[count] = a
+        #         count += 1
+        cnf_array.append([-wizard_pos[y], wizard_pos[z]])
+        cnf_array.append([wizard_pos[y], -wizard_pos[z]])
+    # add clauses for transitivity
+    for i in range(0, len(wizard_list) - 2):
+        for j in range(i+1, len(wizard_list) - 1):
+            for k in range(j+1, len(wizard_list)):
+                    a = (wizard_list[i], wizard_list[j])
+                    b = (wizard_list[j], wizard_list[k])
+                    c = (wizard_list[k], wizard_list[i])
+                    cnf_array.append([wizard_pos[a], wizard_pos[b], wizard_pos[c]])
+                    d = (wizard_list[j], wizard_list[i])
+                    e = (wizard_list[k], wizard_list[j])
+                    f = (wizard_list[i], wizard_list[k])
+                    cnf_array.append([wizard_pos[d], wizard_pos[e], wizard_pos[f]])
 
-        # x = 100 * first_num + second_num
-        # y = 100 * second_num + third_num
-        # z = 100 * first_num + third_num
-        cnf_array.append([-wizard_pos[x], wizard_pos[y]])
-        cnf_array.append([wizard_pos[x], wizard_pos[z]])
     print("wiz list:", wizard_list)
     # for item in cnf_array:
     #     print("number:", item[0], item[1], "variable: ", pos_wizard[item[0]],  pos_wizard[item[1]])
     # print(cnf_array)
     satisfying_assignment = pycosat.solve(cnf_array)
-    # print(satisfying_assignment)
+    print(satisfying_assignment)
     for item in satisfying_assignment:
         if item in pos_wizard:
             print("constraint:", pos_wizard[item])
