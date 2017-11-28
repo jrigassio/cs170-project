@@ -24,20 +24,31 @@ def solve(num_wizards, num_constraints, wizards, constraints):
     """
     ordering: a mapping from character names to indices, wizards is the inverse mapping
     """
+
     wizard_list = list(wizards)
-    wizard_pos = {} #keys: tuple of a < b, values:
-    pos_wizard = {} #keys: indices values: tuple representing a < b
+    wizard_pos = {}
+    pos_wizard = {}
     cnf_array = []
     count = 1
 
-    for i in range(0, len(wizard_list) - 1):
-        for j in range(i+1, len(wizard_list)):
-                wizard_pos[(wizard_list[i], wizard_list[j])] = count
-                pos_wizard[count] = (wizard_list[i], wizard_list[j])
-                wizard_pos[(wizard_list[j], wizard_list[i])] = -count
-                pos_wizard[-count] = (wizard_list[j], wizard_list[i])
-                count += 1
-
+    for i in range(num_wizards-1):
+        for j in range(i+1, num_wizards):
+            wizard_pos[(wizards[i], wizards[j])] = count
+            wizard_pos[(wizards[j], wizards[i])] = -count
+            pos_wizard[-count] = (wizards[j], wizards[i])
+            pos_wizard[count] = (wizards[i], wizards[j])
+            count += 1
+    for i in range(num_wizards-2):
+        for j in range(i+1, num_wizards-1):
+            for k in range(j+1, num_wizards):
+                    a = (wizard_list[i], wizard_list[j])
+                    b = (wizard_list[j], wizard_list[k])
+                    c = (wizard_list[k], wizard_list[i])
+                    cnf_array.append([wizard_pos[a], wizard_pos[b], wizard_pos[c]])
+                    d = (wizard_list[j], wizard_list[i])
+                    e = (wizard_list[k], wizard_list[j])
+                    f = (wizard_list[i], wizard_list[k])
+                    cnf_array.append([wizard_pos[d], wizard_pos[e], wizard_pos[f]])
     for con in constraints:
         first_wiz =  con[0]
         second_wiz = con[1]
@@ -47,25 +58,48 @@ def solve(num_wizards, num_constraints, wizards, constraints):
         z = (first_wiz, third_wiz)
         cnf_array.append([-wizard_pos[y], wizard_pos[z]])
         cnf_array.append([wizard_pos[y], -wizard_pos[z]])
-    for i in range(0, len(wizard_list) - 2):
-        for j in range(i+1, len(wizard_list) - 1):
-            for k in range(j+1, len(wizard_list)):
-                    a = (wizard_list[i], wizard_list[j])
-                    b = (wizard_list[j], wizard_list[k])
-                    c = (wizard_list[k], wizard_list[i])
-                    cnf_array.append([wizard_pos[a], wizard_pos[b], wizard_pos[c]])
-                    d = (wizard_list[j], wizard_list[i])
-                    e = (wizard_list[k], wizard_list[j])
-                    f = (wizard_list[i], wizard_list[k])
-                    cnf_array.append([wizard_pos[d], wizard_pos[e], wizard_pos[f]])
-    print("wiz list:", wizard_list)
+    # print("wiz list:", wizard_list)
     satisfying_assignment = pycosat.solve(cnf_array)
-    print(satisfying_assignment)
-    for item in satisfying_assignment:
-        if item in pos_wizard:
-            print("constraint:", pos_wizard[item])
-    return wizards
+    # print(satisfying_assignment)
 
+    graph = {}
+    for item in satisfying_assignment:
+        # print("constraint:", pos_wizard[item])
+        if pos_wizard[item][0] in graph:
+            graph[pos_wizard[item][0]].append(pos_wizard[item][1])
+        else:
+            graph[pos_wizard[item][0]] = [pos_wizard[item][1]]
+    for wizard in wizard_list:
+        if wizard not in graph:
+            graph[wizard] = []
+    ordering, visited = [], set()
+    stack = []
+    # print(graph)
+
+    visited, rec = set(), set()
+    failed = False
+    toppl = []
+
+    def postorder_traversal(start):
+        visited.add(start)
+        rec.add(start)
+        for neighbor in graph[start]:
+            if neighbor in rec:
+                failed = True
+                return
+            if neighbor not in visited:
+                postorder_traversal(neighbor)
+        toppl.append(start)
+        rec.remove(start)
+
+    for i in range(num_wizards):
+        if not wizards[i] in visited:
+            postorder_traversal(wizards[i])
+    return toppl if not failed else []
+
+
+
+    return wizards
 """
 ======================================================================
    No need to change any code below this line
