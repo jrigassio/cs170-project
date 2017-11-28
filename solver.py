@@ -45,19 +45,8 @@ def solve(num_wizards, num_constraints, wizards, constraints):
         x = (first_wiz, second_wiz)
         y = (second_wiz, third_wiz)
         z = (first_wiz, third_wiz)
-        # for a in (x, y, z):
-        #     if a in wizard_pos:
-        #         pass
-        #     elif (a[1], a[0]) in wizard_pos:
-        #         wizard_pos[a] = - wizard_pos[(a[1], a[0])]
-        #         pos_wizard[-wizard_pos[(a[1], a[0])]] = (a[1], a[0])
-        #     else:
-        #         wizard_pos[a] = count
-        #         pos_wizard[count] = a
-        #         count += 1
         cnf_array.append([-wizard_pos[y], wizard_pos[z]])
         cnf_array.append([wizard_pos[y], -wizard_pos[z]])
-    # add clauses for transitivity
     for i in range(0, len(wizard_list) - 2):
         for j in range(i+1, len(wizard_list) - 1):
             for k in range(j+1, len(wizard_list)):
@@ -69,18 +58,13 @@ def solve(num_wizards, num_constraints, wizards, constraints):
                     e = (wizard_list[k], wizard_list[j])
                     f = (wizard_list[i], wizard_list[k])
                     cnf_array.append([wizard_pos[d], wizard_pos[e], wizard_pos[f]])
-
     print("wiz list:", wizard_list)
-    # for item in cnf_array:
-    #     print("number:", item[0], item[1], "variable: ", pos_wizard[item[0]],  pos_wizard[item[1]])
-    # print(cnf_array)
     satisfying_assignment = pycosat.solve(cnf_array)
     print(satisfying_assignment)
     for item in satisfying_assignment:
         if item in pos_wizard:
             print("constraint:", pos_wizard[item])
     return wizards
-
 
 """
 ======================================================================
